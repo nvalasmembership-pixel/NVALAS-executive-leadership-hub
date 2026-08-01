@@ -531,4 +531,34 @@ document.querySelectorAll('.pdf-open').forEach(el => {
     openHubPdf(el.dataset.pdf);
   });
 });
-</script></body></html>
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const leaders = document.querySelector('.leaders');
+  if (!leaders) return;
+
+  const desiredOrder = [
+    'Ramona Esparza-Stoffregan',
+    'Shirley Jimenez',
+    'Elena M. Fabunan',
+    'Jose Sotelo',
+    'Azucena Parra',
+    'Oscar Padilla'
+  ];
+
+  const cards = Array.from(leaders.querySelectorAll(':scope > .leader'));
+  const cardByName = new Map();
+
+  cards.forEach(card => {
+    const image = card.querySelector('img[alt]');
+    if (image) cardByName.set(image.getAttribute('alt'), card);
+  });
+
+  desiredOrder.forEach(name => {
+    const card = cardByName.get(name);
+    if (card) leaders.appendChild(card);
+  });
+});
+</script>
+
+</body></html>
