@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NVALAS Board Action Tracker</title>
+<style>
+:root{
+  --navy:#062d49;
+  --blue:#0e5f91;
+  --gold:#e1ad35;
+  --cream:#fff7e4;
+  --teal:#147e76;
+  --coral:#c65a47;
+  --plum:#704d7c;
+  --ink:#173248;
+  --muted:#667b89;
+  --line:#d6e3e9;
+  --white:#fff;
+  --shadow:0 14px 34px rgba(6,45,73,.13);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+  background:linear-gradient(180deg,#eaf5fb,#fff9eb 45%,#f1f6f8);
+  color:var(--ink);
+}
+header{
+  background:linear-gradient(120deg,var(--navy),var(--blue) 58%,var(--teal));
+  color:white;
+  padding:28px 34px;
+  box-shadow:var(--shadow);
+}
+header .eyebrow{
+  text-transform:uppercase;
+  letter-spacing:.14em;
+  color:#ffe69c;
+  font-size:12px;
+  font-weight:800;
+}
+header h1{margin:8px 0 4px;font-size:34px}
+header p{margin:0;color:#dceff3}
+main{max-width:1400px;margin:0 auto;padding:28px}
+.toolbar{
+  background:white;
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:16px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+  box-shadow:0 7px 22px rgba(6,45,73,.07);
+}
+button,.button{
+  border:0;
+  border-radius:10px;
+  padding:10px 14px;
+  font-weight:800;
+  cursor:pointer;
+  background:linear-gradient(90deg,var(--navy),var(--blue));
+  color:white;
+}
+button.secondary{
+  background:#eef5f7;
+  color:var(--navy);
+  box-shadow:inset 0 0 0 1px #cbdce4;
+}
+button.danger{background:linear-gradient(90deg,#9d3f34,var(--coral))}
+input,select{
+  border:1px solid #bfd1da;
+  border-radius:10px;
+  padding:10px 12px;
+  font:inherit;
+  color:var(--ink);
+  background:#fff;
+}
+.toolbar input{min-width:240px;flex:1}
+.summary{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+  margin:18px 0;
+}
+.metric{
+  border-radius:18px;
+  padding:18px;
+  color:white;
+  box-shadow:0 9px 22px rgba(6,45,73,.12);
+}
+.metric:nth-child(1){background:linear-gradient(135deg,#0f5f89,#1889a1)}
+.metric:nth-child(2){background:linear-gradient(135deg,#8b4e79,#bb6986)}
+.metric:nth-child(3){background:linear-gradient(135deg,#c4653d,#dfaa36)}
+.metric:nth-child(4){background:linear-gradient(135deg,#17766f,#45a58a)}
+.metric .value{font-size:30px;font-weight:900}
+.metric .label{font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.table-wrap{
+  background:white;
+  border:1px solid var(--line);
+  border-radius:20px;
+  overflow:auto;
+  box-shadow:0 7px 22px rgba(6,45,73,.07);
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:980px;
+}
+thead th{
+  background:#165b66;
+  color:white;
+  text-align:left;
+  padding:14px;
+  position:sticky;
+  top:0;
+  z-index:1;
+}
+tbody td{
+  border-top:1px solid var(--line);
+  padding:10px;
+  vertical-align:middle;
+}
+tbody tr:hover{background:#f8fbfc}
+td[contenteditable="true"]{
+  min-width:170px;
+  outline:none;
+}
+td[contenteditable="true"]:focus{
+  background:#fff7e4;
+  box-shadow:inset 0 0 0 2px var(--gold);
+}
+.status{
+  font-weight:800;
+  border-radius:999px;
+  padding:8px 10px;
+}
+.status.not-started{background:#edf0f3;color:#4f6471}
+.status.in-progress{background:#fff0c8;color:#7b5700}
+.status.pending{background:#e8effc;color:#2e5b9e}
+.status.completed{background:#e4f4ea;color:#2b7055}
+.status.deferred{background:#f3eafa;color:#704d7c}
+.status.cancelled{background:#fdebe6;color:#9d3f34}
+.overdue{background:#fff0f0 !important}
+.small-note{
+  margin-top:14px;
+  color:var(--muted);
+  font-size:13px;
+}
+footer{text-align:center;padding:24px;color:var(--muted);font-size:12px}
+@media(max-width:900px){
+  .summary{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:560px){
+  main{padding:16px}
+  header{padding:22px}
+  header h1{font-size:28px}
+  .summary{grid-template-columns:1fr}
+}
+@media print{
+  .toolbar,.delete-col,footer{display:none!important}
+  body{background:white}
+  main{max-width:none;padding:0}
+  .table-wrap{box-shadow:none}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">NVALAS Executive Leadership Hub</div>
+  <h1>Board Action Tracker</h1>
+  <p>August 2026 • Track ownership, status, target dates, and board follow-through.</p>
+</header>
+
+<main>
+  <section class="toolbar">
+    <button id="addRow">+ Add Action Item</button>
+    <button class="secondary" id="exportCsv">Export CSV</button>
+    <button class="secondary" onclick="window.print()">Print / Save PDF</button>
+    <button class="danger" id="clearAll">Clear All</button>
+    <input id="search" type="search" placeholder="Search action items or owners">
+    <select id="filterStatus" aria-label="Filter by status">
+      <option value="">All statuses</option>
+      <option>Not Started</option>
+      <option>In Progress</option>
+      <option>Pending</option>
+      <option>Completed</option>
+      <option>Deferred</option>
+      <option>Cancelled</option>
+    </select>
+  </section>
+
+  <section class="summary">
+    <div class="metric"><div class="value" id="countAll">0</div><div class="label">Total Actions</div></div>
+    <div class="metric"><div class="value" id="countProgress">0</div><div class="label">In Progress</div></div>
+    <div class="metric"><div class="value" id="countCompleted">0</div><div class="label">Completed</div></div>
+    <div class="metric"><div class="value" id="countOverdue">0</div><div class="label">Overdue</div></div>
+  </section>
+
+  <section class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Action Item</th>
+          <th>Owner</th>
+          <th>Status</th>
+          <th>Target Date</th>
+          <th>Notes</th>
+          <th class="delete-col">Remove</th>
+        </tr>
+      </thead>
+      <tbody id="trackerBody"></tbody>
+    </table>
+  </section>
+
+  <p class="small-note">Changes save automatically in this browser. Use Export CSV for a backup before clearing browser data or moving to another device.</p>
+</main>
+
+<footer>NVALAS Board Action Tracker • Executive Leadership Hub</footer>
+
+<script>
+const STORAGE_KEY = 'nvalasBoardActionTracker_v1';
+const statuses = ['Not Started','In Progress','Pending','Completed','Deferred','Cancelled'];
+
+const defaultRows = [{
+  action:'Vote on by-laws',
+  owner:'Executive Board',
+  status:'In Progress',
+  target:'2026-08-26',
+  notes:''
+}];
+
+let rows = loadRows();
+
+function loadRows(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    return Array.isArray(saved) && saved.length ? saved : defaultRows;
+  }catch(e){
+    return defaultRows;
+  }
+}
+
+function saveRows(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+  renderSummary();
+}
+
+function statusClass(status){
+  return status.toLowerCase().replace(/\s+/g,'-');
+}
+
+function isOverdue(row){
+  if(!row.target || row.status === 'Completed' || row.status === 'Cancelled') return false;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const target = new Date(row.target + 'T00:00:00');
+  return target < today;
+}
+
+function render(){
+  const body = document.getElementById('trackerBody');
+  const query = document.getElementById('search').value.toLowerCase();
+  const filter = document.getElementById('filterStatus').value;
+
+  body.innerHTML = '';
+
+  rows.forEach((row,index)=>{
+    const haystack = `${row.action} ${row.owner} ${row.notes}`.toLowerCase();
+    if(query && !haystack.includes(query)) return;
+    if(filter && row.status !== filter) return;
+
+    const tr = document.createElement('tr');
+    if(isOverdue(row)) tr.classList.add('overdue');
+
+    tr.innerHTML = `
+      <td contenteditable="true" data-field="action" data-index="${index}">${escapeHtml(row.action)}</td>
+      <td contenteditable="true" data-field="owner" data-index="${index}">${escapeHtml(row.owner)}</td>
+      <td>
+        <select class="status ${statusClass(row.status)}" data-field="status" data-index="${index}">
+          ${statuses.map(s=>`<option ${s===row.status?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </td>
+      <td><input type="date" data-field="target" data-index="${index}" value="${row.target||''}"></td>
+      <td contenteditable="true" data-field="notes" data-index="${index}">${escapeHtml(row.notes||'')}</td>
+      <td class="delete-col"><button class="danger" data-delete="${index}">Delete</button></td>
+    `;
+    body.appendChild(tr);
+  });
+
+  bindEvents();
+  renderSummary();
+}
+
+function bindEvents(){
+  document.querySelectorAll('[contenteditable="true"]').forEach(el=>{
+    el.addEventListener('input', e=>{
+      const i = Number(e.target.dataset.index);
+      const field = e.target.dataset.field;
+      rows[i][field] = e.target.innerText.trim();
+      saveRows();
+    });
+  });
+
+  document.querySelectorAll('select[data-field], input[data-field]').forEach(el=>{
+    el.addEventListener('change', e=>{
+      const i = Number(e.target.dataset.index);
+      const field = e.target.dataset.field;
+      rows[i][field] = e.target.value;
+      saveRows();
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-delete]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      const i = Number(e.target.dataset.delete);
+      rows.splice(i,1);
+      saveRows();
+      render();
+    });
+  });
+}
+
+function renderSummary(){
+  document.getElementById('countAll').textContent = rows.length;
+  document.getElementById('countProgress').textContent = rows.filter(r=>r.status==='In Progress').length;
+  document.getElementById('countCompleted').textContent = rows.filter(r=>r.status==='Completed').length;
+  document.getElementById('countOverdue').textContent = rows.filter(isOverdue).length;
+}
+
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+  }[c]));
+}
+
+document.getElementById('addRow').addEventListener('click', ()=>{
+  rows.push({action:'',owner:'',status:'Not Started',target:'',notes:''});
+  saveRows();
+  render();
+});
+
+document.getElementById('search').addEventListener('input', render);
+document.getElementById('filterStatus').addEventListener('change', render);
+
+document.getElementById('clearAll').addEventListener('click', ()=>{
+  if(confirm('Clear all action items? This cannot be undone unless you exported a backup.')){
+    rows = [];
+    saveRows();
+    render();
+  }
+});
+
+document.getElementById('exportCsv').addEventListener('click', ()=>{
+  const headers = ['Action Item','Owner','Status','Target Date','Notes'];
+  const lines = [headers, ...rows.map(r=>[r.action,r.owner,r.status,r.target,r.notes])];
+  const csv = lines.map(row=>row.map(cell=>`"${String(cell??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'NVALAS-Board-Action-Tracker.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+render();
+</script>
+</body>
+</html>
